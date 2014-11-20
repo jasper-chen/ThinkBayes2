@@ -45,7 +45,14 @@ class Cookie(Pmf):
         hypo: string bowl ID
         """
         mix = self.mixes[hypo]
-        like = mix[data]
+        like = mix[data]*.9
+
+        # if data == 'vanilla':
+        #     like = mix[data]*.1
+
+        # if data == 'chocolate':
+        #     like = mix[data]*.9
+
         return like
 
 
@@ -54,7 +61,7 @@ def main():
 
     pmf = Cookie(hypos)
 
-    pmf.Update('vanilla')
+    pmf.Update('chocolate')
 
     for hypo, prob in pmf.Items():
         print(hypo, prob)

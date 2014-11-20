@@ -1,3 +1,4 @@
+
 """This file contains code for use with "Think Bayes",
 by Allen B. Downey, available from greenteapress.com
 
@@ -20,12 +21,18 @@ class Gps(thinkbayes2.Suite, thinkbayes2.Joint):
     def Likelihood(self, data, hypo):
         """Computes the likelihood of the data under the hypothesis.
 
-        hypo: 
-        data: 
+        hypo: actual_x, actual_y
+        data: measured_x, measured_y
         """
         # TODO: fill this in
-        like = 1
-        return like
+        actual_x, actual_y = hypo
+        measured_x, measured_y = data
+        error_x = measured_x - actual_x
+        error_y = measured_y - actual_y
+
+        like1 = thinkbayes2.EvalNormalPdf(error_x, 0, 30)
+        like2 = thinkbayes2.EvalNormalPdf(error_y, 0, 30)
+        return like1 * like2
 
 
 def main():
@@ -48,6 +55,12 @@ def main():
 
     # TODO: plot the marginals and print the posterior means
 
+    post_x = joint.Marginal(0, label='x')
+    post_y = joint.Marginal(1, label='y')
+
+    thinkplot.PrePlot(2)
+    thinkplot.Pdfs([post_x, post_y])
+    thinkplot.Show()
 
 if __name__ == '__main__':
     main()
