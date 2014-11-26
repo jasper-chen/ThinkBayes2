@@ -19,7 +19,7 @@ class Pingpong(thinkbayes2.Suite):
         label: string
         """
         if USE_SUMMARY_DATA:
-            # prior based on each team's average goals scored
+            # prior based on each team's average points scored
             mu = 9.7
             sigma = 1.6
         else:
@@ -35,8 +35,8 @@ class Pingpong(thinkbayes2.Suite):
 
         Evaluates the Poisson PMF for lambda and k.
 
-        hypo: goal scoring rate in goals per game
-        data: goals scored in one period
+        hypo: point scoring rate in points per game
+        data: points scored in one period
         """
         lam = hypo
         k = data
@@ -44,13 +44,13 @@ class Pingpong(thinkbayes2.Suite):
         return like
 
 
-def MakeGoalPmf(suite, high=10):
-    """Makes the distribution of goals scored, given distribution of lam.
+def MakePointPmf(suite, high=10):
+    """Makes the distribution of points scored, given distribution of lam.
 
-    suite: distribution of goal-scoring rate
+    suite: distribution of point-scoring rate
     high: upper bound
 
-    returns: Pmf of goals per game
+    returns: Pmf of points per game
     """
     metapmf = thinkbayes2.Pmf()
 
@@ -62,12 +62,12 @@ def MakeGoalPmf(suite, high=10):
     return mix
 
 
-def MakeGoalTimePmf(suite):
-    """Makes the distribution of time til first goal.
+def MakePointTimePmf(suite):
+    """Makes the distribution of time til first point.
 
-    suite: distribution of goal-scoring rate
+    suite: distribution of point-scoring rate
 
-    returns: Pmf of goals per game
+    returns: Pmf of points per game
     """
     metapmf = thinkbayes2.Pmf()
 
@@ -87,7 +87,7 @@ class Game(object):
     convert = dict()
 
     def clean(self):
-        self.goals = self.pd1 + self.pd2 + self.pd3
+        self.points = self.pd1 + self.pd2 + self.pd3
 
 
 def ReadPingpongData(filename='Pingponga.csv'):
@@ -118,28 +118,28 @@ def ReadPingpongData(filename='Pingponga.csv'):
 
 
 def ProcessScoresPairwise(pairs):
-    """Average number of goals for each team against each opponent.
+    """Average number of points for each team against each opponent.
 
     pairs: map from (team1, team2) to (score1, score2)
     """
-    # map from (team1, team2) to list of goals scored
-    goals_scored = {}
+    # map from (team1, team2) to list of points scored
+    points_scored = {}
     for key, entries in pairs.iteritems():
         t1, t2 = key
         for entry in entries:
             g1, g2 = entry
-            goals_scored.setdefault((t1, t2), []).append(g1)
-            goals_scored.setdefault((t2, t1), []).append(g2)
+            points_scored.setdefault((t1, t2), []).append(g1)
+            points_scored.setdefault((t2, t1), []).append(g2)
 
-    # make a list of average goals scored
+    # make a list of average points scored
     lams = []
-    for key, goals in goals_scored.iteritems():
-        if len(goals) < 3:
+    for key, points in points_scored.iteritems():
+        if len(points) < 3:
             continue
-        lam = thinkbayes2.Mean(goals)
+        lam = thinkbayes2.Mean(points)
         lams.append(lam)
 
-    # make the distribution of average goals scored
+    # make the distribution of average points scored
     cdf = thinkbayes2.MakeCdfFromList(lams)
     thinkplot.Cdf(cdf)
     thinkplot.Show()
@@ -147,30 +147,27 @@ def ProcessScoresPairwise(pairs):
     mu, var = thinkbayes2.MeanVar(lams)
     print('mu, sig', mu, math.sqrt(var))
 
-    print('BOS v VAN', pairs['BOS', 'VAN'])
-
-
 def ProcessScoresTeamwise(pairs):
-    """Average number of goals for each team.
+    """Average number of points for each team.
 
     pairs: map from (team1, team2) to (score1, score2)
     """
-    # map from team to list of goals scored
-    goals_scored = {}
+    # map from team to list of points scored
+    points_scored = {}
     for key, entries in pairs.iteritems():
         t1, t2 = key
         for entry in entries:
             g1, g2 = entry
-            goals_scored.setdefault(t1, []).append(g1)
-            goals_scored.setdefault(t2, []).append(g2)
+            points_scored.setdefault(t1, []).append(g1)
+            points_scored.setdefault(t2, []).append(g2)
 
-    # make a list of average goals scored
+    # make a list of average points scored
     lams = []
-    for key, goals in goals_scored.iteritems():
-        lam = thinkbayes2.Mean(goals)
+    for key, points in points_scored.iteritems():
+        lam = thinkbayes2.Mean(points)
         lams.append(lam)
 
-    # make the distribution of average goals scored
+    # make the distribution of average points scored
     cdf = thinkbayes2.MakeCdfFromList(lams)
     thinkplot.Cdf(cdf)
     thinkplot.Show()
@@ -193,7 +190,7 @@ def main():
     thinkplot.Pmf(suite1)
     thinkplot.Pmf(suite2)
     thinkplot.Save(root='Pingpong0',
-                xlabel='Goals per game',
+                xlabel='Points per game',
                 ylabel='Probability',
                 formats=formats)
 
@@ -205,30 +202,30 @@ def main():
     thinkplot.Pmf(suite1)
     thinkplot.Pmf(suite2)
     thinkplot.Save(root='Pingpong1',
-                xlabel='Goals per game',
+                xlabel='Points per game',
                 ylabel='Probability',
                 formats=formats)
 
 
-    goal_dist1 = MakeGoalPmf(suite1)
-    goal_dist2 = MakeGoalPmf(suite2)
+    point_dist1 = MakePointPmf(suite1)
+    point_dist2 = MakePointPmf(suite2)
 
     thinkplot.Clf()
     thinkplot.PrePlot(num=2)
-    thinkplot.Pmf(goal_dist1)
-    thinkplot.Pmf(goal_dist2)
+    thinkplot.Pmf(point_dist1)
+    thinkplot.Pmf(point_dist2)
     thinkplot.Save(root='Pingpong2',
-                xlabel='Goals',
+                xlabel='Points',
                 ylabel='Probability',
                 formats=formats)
 
-    time_dist1 = MakeGoalTimePmf(suite1)    
-    time_dist2 = MakeGoalTimePmf(suite2)
+    time_dist1 = MakePointTimePmf(suite1)    
+    time_dist2 = MakePointTimePmf(suite2)
  
     print('MLE Julian', suite1.MaximumLikelihood())
     print('MLE Jasper', suite2.MaximumLikelihood())
 
-    diff = goal_dist1 - goal_dist2
+    diff = point_dist1 - point_dist2
     p_win = diff.ProbGreater(0)
     p_loss = diff.ProbLess(0)
     p_tie = diff.Prob(0)
